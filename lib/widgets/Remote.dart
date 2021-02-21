@@ -55,9 +55,11 @@ class _ChatPage extends State<Remote> {
               : isConnected
                   ? Text('Live chat with ' + widget.server.name)
                   : Text('Chat log with ' + widget.server.name))),
-      body: GestureDetector(onTap: isConnected ? () => _sendMessage('o') : null),
+      body: GestureDetector(onTap: isConnected ? () => _sendMessage('d-023+031') : null),
     );
   }
+
+  
 
   void _sendMessage(String text) async {
     if (text.length > 0) {
