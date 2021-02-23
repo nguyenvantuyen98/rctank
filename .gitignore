@@ -6,3 +6,6 @@
 .dart_tool/version
 .dart_tool/
 build/
+ios/Podfile.lock
+ios/Runner.xcodeproj/
+ios/Runner.xcworkspace/

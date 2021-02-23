@@ -4,6 +4,7 @@ import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 
 import './SelectBondedDevicePage.dart';
 import 'Remote.dart';
+import 'JoyStickWidget.dart';
 
 class MainPage extends StatefulWidget {
   @override
@@ -38,14 +39,14 @@ class _MainPage extends State<MainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Flutter Bluetooth Serial'),
+        title: const Text(''),
       ),
       body: Container(
         child: ListView(
           children: <Widget>[
             ListTile(
               title: ElevatedButton(
-                child: const Text('Connect to paired device to chat'),
+                child: const Text('Button'),
                 onPressed: () async {
                   final BluetoothDevice selectedDevice = await Navigator.of(context).push(
                     MaterialPageRoute(
@@ -61,6 +62,16 @@ class _MainPage extends State<MainPage> {
                   } else {
                     print('Connect -> no device selected');
                   }
+                },
+                onLongPress: () {
+                  print('Navigator');
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) {
+                        return JoyStickWidget();
+                      },
+                    ),
+                  );
                 },
               ),
             ),
