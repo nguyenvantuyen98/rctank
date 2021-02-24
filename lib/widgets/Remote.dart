@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 
+import 'joystick/JoyStick.dart';
+
 class Remote extends StatefulWidget {
   final BluetoothDevice server;
 
@@ -50,16 +52,25 @@ class _ChatPage extends State<Remote> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: (isConnecting
-              ? Text('Connecting to ' + widget.server.name + '...')
-              : isConnected
-                  ? Text('Live chat with ' + widget.server.name)
-                  : Text('Chat log with ' + widget.server.name))),
-      body: GestureDetector(onTap: isConnected ? () => _sendMessage('d-023+031') : null),
+        title: (isConnecting
+            ? Text('Connecting to ' + widget.server.name + '...')
+            : isConnected
+                ? Text('Live chat with ' + widget.server.name)
+                : Text('Chat log with ' + widget.server.name)),
+      ),
+      body: Center(
+        child: JoyStick(
+          insideRadius: 50,
+          outsideRadius: 100,
+          callBack: isConnected
+              ? (cmd) {}
+              : (cmd) {
+                  _sendMessage(cmd);
+                },
+        ),
+      ),
     );
   }
-
-  
 
   void _sendMessage(String text) async {
     if (text.length > 0) {

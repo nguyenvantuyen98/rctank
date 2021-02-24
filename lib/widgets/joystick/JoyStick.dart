@@ -6,9 +6,16 @@ import 'BackgroundPainter.dart';
 import 'position.dart';
 
 class JoyStick extends StatefulWidget {
+  JoyStick({
+    @required this.insideRadius,
+    @required this.outsideRadius,
+    this.callBack,
+  });
+
   final double insideRadius;
   final double outsideRadius;
-  JoyStick({@required this.insideRadius, @required this.outsideRadius});
+  final Function(String cmd) callBack;
+
   @override
   _JoyStickState createState() => _JoyStickState();
 }
@@ -16,11 +23,11 @@ class JoyStick extends StatefulWidget {
 class _JoyStickState extends State<JoyStick> {
   StreamController<Position> controller = StreamController<Position>();
   //Radius of smallest circle
-  double sR;
+  double insideRadius;
   //Radius of medium circle
-  double mR;
+  double middleRadius;
   //Radius of largest circle
-  double lR;
+  double outsideRadius;
   //Pad from center Axis to largest Axis
   double padOut;
   //Horizontal position of stick
@@ -32,12 +39,12 @@ class _JoyStickState extends State<JoyStick> {
 
   @override
   void initState() {
-    sR = widget.insideRadius;
-    mR = widget.outsideRadius;
-    lR = sR + 1.1 * mR;
-    padOut = lR - sR;
-    Position.padLength = mR;
-    stickSize = Size(sR, sR);
+    insideRadius = widget.insideRadius;
+    middleRadius = widget.outsideRadius;
+    outsideRadius = insideRadius + 1.1 * middleRadius;
+    padOut = outsideRadius - insideRadius;
+    Position.padLength = middleRadius;
+    stickSize = Size(insideRadius, insideRadius);
     controller.sink.add(Position.center());
     super.initState();
   }
@@ -53,10 +60,10 @@ class _JoyStickState extends State<JoyStick> {
     return Stack(
       children: [
         CustomPaint(
-          size: Size(2 * lR, 2 * lR),
+          size: Size(2 * outsideRadius, 2 * outsideRadius),
           painter: BackGroundPainter(
-            smallRadius: sR,
-            largeRadius: mR,
+            smallRadius: insideRadius,
+            largeRadius: middleRadius,
           ),
         ),
         //Stick layer
@@ -70,8 +77,8 @@ class _JoyStickState extends State<JoyStick> {
               top: hPosition,
               left: wPosition,
               child: Container(
-                width: 2 * sR,
-                height: 2 * sR,
+                width: 2 * insideRadius,
+                height: 2 * insideRadius,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(),
@@ -96,8 +103,8 @@ class _JoyStickState extends State<JoyStick> {
                 controller.sink.add(Position.center());
               },
               child: Container(
-                width: 2 * mR,
-                height: 2 * mR,
+                width: 2 * middleRadius,
+                height: 2 * middleRadius,
                 decoration: BoxDecoration(
                   // color: Colors.red,
                   shape: BoxShape.circle,
@@ -111,18 +118,30 @@ class _JoyStickState extends State<JoyStick> {
   }
 
   void setPosition(Position position) {
-    if (position.distance > mR) {
+    if (position.distance > middleRadius) {
       double arctan = atan(position.localY / position.localX);
-      hPosition = (mR * sin(arctan)).abs();
+      hPosition = (middleRadius * sin(arctan)).abs();
       if (position.localY < 0) hPosition = -hPosition;
-      wPosition = (mR * cos(arctan)).abs();
+      wPosition = (middleRadius * cos(arctan)).abs();
       if (position.localX < 0) wPosition = -wPosition;
     } else {
       wPosition = position.localX;
       hPosition = position.localY;
     }
-    print('${wPosition / mR} ${hPosition / mR}');
     wPosition = wPosition + padOut;
     hPosition = hPosition + padOut;
+
+    widget.callBack(
+      convertCmd(
+        wPosition / middleRadius - 1.1,
+        hPosition / middleRadius - 1.1,
+      ),
+    );
   }
+}
+
+String convertCmd(double wPosition, double hPosition) {
+  print('$wPosition $hPosition');
+
+  return 'd-023+031';
 }

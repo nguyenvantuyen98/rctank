@@ -20,6 +20,7 @@ class _ChatPage extends State<JoyStickWidget> {
         child: JoyStick(
           insideRadius: 50,
           outsideRadius: 100,
+          callBack: (string){},
         ),
       ),
     );
