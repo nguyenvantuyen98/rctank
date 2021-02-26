@@ -118,8 +118,8 @@ class _JoyStickState extends State<JoyStick> {
   }
 
   void setPosition(Position position) {
+    final double arctan = atan(position.localY / position.localX);
     if (position.distance > middleRadius) {
-      double arctan = atan(position.localY / position.localX);
       hPosition = (middleRadius * sin(arctan)).abs();
       if (position.localY < 0) hPosition = -hPosition;
       wPosition = (middleRadius * cos(arctan)).abs();
@@ -132,16 +132,118 @@ class _JoyStickState extends State<JoyStick> {
     hPosition = hPosition + padOut;
 
     widget.callBack(
-      convertCmd(
-        wPosition / middleRadius - 1.1,
-        hPosition / middleRadius - 1.1,
-      ),
+      convertCmd(wPosition / middleRadius - 1.1, -(hPosition / middleRadius - 1.1), arctan),
     );
   }
 }
 
-String convertCmd(double wPosition, double hPosition) {
-  print('$wPosition $hPosition');
+double mapRadian({
+  double inputStart,
+  double inputEnd,
+  double outputStart,
+  double outputEnd,
+  double input,
+}) {
+  final double slope = (outputEnd - outputStart) / (inputEnd - inputStart);
+  return outputStart + slope * (input - inputStart);
+}
 
-  return 'd-023+031';
+double getDistance(double x, double y) => sqrt(x * x + y * y);
+
+String roundNumber(double num) {
+  String roundedNumber = '$num';
+  if (roundedNumber[0] != '-') roundedNumber = '+' + roundedNumber;
+  roundedNumber = roundedNumber.replaceAll('.', '');
+  if (roundedNumber.length > 4) {
+    roundedNumber = roundedNumber.substring(0, 4);
+  } else {
+    roundedNumber = roundedNumber.padRight(4, '0');
+  }
+  return roundedNumber;
+}
+
+String convertCmd(
+  double wPosition,
+  double hPosition,
+  double arctan,
+) {
+  final double distance = getDistance(wPosition, hPosition);
+  if (arctan <= 0) {
+    if (wPosition >= 0 || hPosition >= 0) {
+      final double left = mapRadian(
+            inputStart: -pi / 2,
+            inputEnd: 0,
+            outputStart: 1,
+            outputEnd: 0.5,
+            input: arctan,
+          ) *
+          distance;
+      final double right = mapRadian(
+            inputStart: -pi / 2,
+            inputEnd: 0,
+            outputStart: 1,
+            outputEnd: -0.5,
+            input: arctan,
+          ) *
+          distance;
+      return 'd${roundNumber(left)}${roundNumber(right)}';
+    } else {
+      final double left = mapRadian(
+            inputStart: -pi / 2,
+            inputEnd: 0,
+            outputStart: -1,
+            outputEnd: -0.5,
+            input: arctan,
+          ) *
+          distance;
+      final double right = mapRadian(
+            inputStart: -pi / 2,
+            inputEnd: 0,
+            outputStart: -1,
+            outputEnd: 0.5,
+            input: arctan,
+          ) *
+          distance;
+      return 'd${roundNumber(left)}${roundNumber(right)}';
+    }
+  } else if (arctan > 0) {
+    if (wPosition >= 0 || hPosition <= 0) {
+      final double left = mapRadian(
+            inputStart: 0,
+            inputEnd: pi / 2,
+            outputStart: 0.5,
+            outputEnd: -1,
+            input: arctan,
+          ) *
+          distance;
+      final double right = mapRadian(
+            inputStart: 0,
+            inputEnd: pi / 2,
+            outputStart: -0.5,
+            outputEnd: -1,
+            input: arctan,
+          ) *
+          distance;
+      return 'd${roundNumber(left)}${roundNumber(right)}';
+    } else {
+      final double left = mapRadian(
+            inputStart: 0,
+            inputEnd: pi / 2,
+            outputStart: -0.5,
+            outputEnd: 1,
+            input: arctan,
+          ) *
+          distance;
+      final double right = mapRadian(
+            inputStart: 0,
+            inputEnd: pi / 2,
+            outputStart: 0.5,
+            outputEnd: 1,
+            input: arctan,
+          ) *
+          distance;
+      return 'd${roundNumber(left)}${roundNumber(right)}';
+    }
+  }
+  return null;
 }
