@@ -132,7 +132,8 @@ class _JoyStickState extends State<JoyStick> {
     hPosition = hPosition + padOut;
 
     widget.callBack(
-      convertCmd(wPosition / middleRadius - 1.1, -(hPosition / middleRadius - 1.1), arctan),
+      convertCmd(wPosition / middleRadius - 1.1,
+          -(hPosition / middleRadius - 1.1), arctan),
     );
   }
 }
@@ -151,15 +152,14 @@ double mapRadian({
 double getDistance(double x, double y) => sqrt(x * x + y * y);
 
 String roundNumber(double num) {
-  String roundedNumber = '$num';
-  if (roundedNumber[0] != '-') roundedNumber = '+' + roundedNumber;
-  roundedNumber = roundedNumber.replaceAll('.', '');
-  if (roundedNumber.length > 4) {
-    roundedNumber = roundedNumber.substring(0, 4);
+  num *= 255;
+  String roundedNumber = '${num.round()}';
+  if (num < 0) {
+    roundedNumber = roundedNumber.substring(1);
+    return '-' + roundedNumber.padLeft(3, '0');
   } else {
-    roundedNumber = roundedNumber.padRight(4, '0');
+    return '+' + roundedNumber.padLeft(3, '0');
   }
-  return roundedNumber;
 }
 
 String convertCmd(
