@@ -2,9 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 
-import './SelectBondedDevicePage.dart';
-import 'Remote.dart';
-import 'JoyStickWidget.dart';
+import './DiscoveryPage.dart';
 
 class MainPage extends StatefulWidget {
   @override
@@ -12,11 +10,26 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPage extends State<MainPage> {
+  BluetoothState _bluetoothState = BluetoothState.UNKNOWN;
+
+  String _address = "...";
+  String _name = "...";
+
   Timer _discoverableTimeoutTimer;
+  int _discoverableTimeoutSecondsLeft = 0;
+
+  bool _autoAcceptPairingRequests = false;
 
   @override
   void initState() {
     super.initState();
+
+    // Get current state
+    FlutterBluetoothSerial.instance.state.then((state) {
+      setState(() {
+        _bluetoothState = state;
+      });
+    });
 
     Future.doWhile(() async {
       // Wait if adapter not enabled
@@ -25,6 +38,30 @@ class _MainPage extends State<MainPage> {
       }
       await Future.delayed(Duration(milliseconds: 0xDD));
       return true;
+    }).then((_) {
+      // Update the address field
+      FlutterBluetoothSerial.instance.address.then((address) {
+        setState(() {
+          _address = address;
+        });
+      });
+    });
+
+    FlutterBluetoothSerial.instance.name.then((name) {
+      setState(() {
+        _name = name;
+      });
+    });
+
+    // Listen for futher state changes
+    FlutterBluetoothSerial.instance.onStateChanged().listen((BluetoothState state) {
+      setState(() {
+        _bluetoothState = state;
+
+        // Discoverable mode is disabled when Bluetooth gets disabled
+        _discoverableTimeoutTimer = null;
+        _discoverableTimeoutSecondsLeft = 0;
+      });
     });
   }
 
@@ -39,54 +76,32 @@ class _MainPage extends State<MainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(''),
+        title: const Text('Flutter Bluetooth Serial'),
       ),
       body: Container(
         child: ListView(
           children: <Widget>[
             ListTile(
               title: ElevatedButton(
-                child: const Text('Button'),
-                onPressed: () async {
-                  final BluetoothDevice selectedDevice = await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return SelectBondedDevicePage(checkAvailability: false);
-                      },
-                    ),
-                  );
+                  child: const Text('Explore discovered devices'),
+                  onPressed: () async {
+                    final BluetoothDevice selectedDevice = await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return DiscoveryPage();
+                        },
+                      ),
+                    );
 
-                  if (selectedDevice != null) {
-                    print('Connect -> selected ' + selectedDevice.address);
-                    _startChat(context, selectedDevice);
-                  } else {
-                    print('Connect -> no device selected');
-                  }
-                },
-                onLongPress: () {
-                  print('Navigator');
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return JoyStickWidget();
-                      },
-                    ),
-                  );
-                },
-              ),
+                    if (selectedDevice != null) {
+                      print('Discovery -> selected ' + selectedDevice.address);
+                    } else {
+                      print('Discovery -> no device selected');
+                    }
+                  }),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _startChat(BuildContext context, BluetoothDevice server) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) {
-          return Remote(server: server);
-        },
       ),
     );
   }

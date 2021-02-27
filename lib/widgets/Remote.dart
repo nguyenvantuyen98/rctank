@@ -6,7 +6,7 @@ import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'joystick/JoyStick.dart';
 
 const String stay = 'd+000+000';
-const duration = const Duration(milliseconds: 100);
+const duration = const Duration(milliseconds: 50);
 
 class Remote extends StatefulWidget {
   final BluetoothDevice server;
@@ -25,16 +25,27 @@ class _ChatPage extends State<Remote> {
   String cmd;
   Timer timer;
 
-  @override
-  void initState() {
+  void startTimer() {
+    print('LOG Start Timer');
     if (timer?.isActive == true) {
       timer.cancel();
     }
     timer = Timer.periodic(duration, (Timer time) => _sendMessage(cmd ?? stay));
-    super.initState();
+  }
 
+  void closeTimer() {
+    print('LOG Cancel Timer');
+    if (timer?.isActive == true) {
+      timer.cancel();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
     BluetoothConnection.toAddress(widget.server.address).then((_connection) {
       print('Connected to the device');
+      startTimer();
       connection = _connection;
       setState(() {
         isConnecting = false;
@@ -48,9 +59,7 @@ class _ChatPage extends State<Remote> {
 
   @override
   void dispose() {
-    if (timer?.isActive == true) {
-      timer.cancel();
-    }
+    closeTimer();
     // Avoid memory leak (`setState` after dispose) and disconnect
     if (isConnected) {
       isDisconnecting = true;
@@ -76,9 +85,11 @@ class _ChatPage extends State<Remote> {
           insideRadius: 50,
           outsideRadius: 100,
           callBack: isConnected
-              ? (cmd) {}
+              ? (cmd) {
+                  this.cmd = cmd;
+                }
               : (cmd) {
-                  // _sendMessage(cmd);
+                  print('LOG not connected');
                 },
         ),
       ),
