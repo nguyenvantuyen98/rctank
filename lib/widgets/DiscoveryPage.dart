@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 
 import './BluetoothDeviceListEntry.dart';
-import 'ChatPage.dart';
 import 'Remote.dart';
 
 class DiscoveryPage extends StatefulWidget {
